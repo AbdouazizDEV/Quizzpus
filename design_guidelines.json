@@ -1,0 +1,139 @@
+{
+  "brand_identity": {
+    "name": "Quizz+",
+    "mantra": "Apprends, joue, brille et gagne.",
+    "tagline": "Le savoir, version africaine du fun.",
+    "aesthetic": "Luxe-Africaine-Gamified",
+    "description": "A mobile-first educational platform that blends African cultural pride with high-end gamification. Dark, mysterious, yet vibrant and rewarding.",
+    "emotional_tone": ["Premium", "Playful", "Cultural", "Rewarding", "Mysterious"]
+  },
+  "colors": {
+    "primary": {
+      "background": "#1B2042",
+      "background_gradient": "linear-gradient(135deg, #1B2042 0%, #0D1526 100%)",
+      "surface": "rgba(255, 255, 255, 0.07)",
+      "surface_highlight": "rgba(255, 255, 255, 0.12)",
+      "border": "rgba(255, 255, 255, 0.1)"
+    },
+    "accent": {
+      "gold": "#C9A84C",
+      "gold_gradient": "linear-gradient(45deg, #C9A84C, #F2D06B, #C9A84C)",
+      "cta_orange": "#FF6B35",
+      "cta_hover": "#FF8C5A"
+    },
+    "text": {
+      "primary": "#F5EFD9",
+      "secondary": "rgba(245, 239, 217, 0.7)",
+      "muted": "rgba(245, 239, 217, 0.4)"
+    },
+    "feedback": {
+      "success": "#2ECC71",
+      "error": "#E74C3C",
+      "warning": "#F1C40F"
+    },
+    "gradients": {
+      "hero": "linear-gradient(135deg, #1B2042 0%, #0D1526 100%)",
+      "gold_text": "linear-gradient(to bottom, #F2D06B, #C9A84C)",
+      "card_shimmer": "linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.05) 50%, transparent 75%)"
+    }
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Poppins, Nunito, Fredoka One, sans-serif",
+      "body": "DM Sans, Outfit, sans-serif",
+      "accent": "Fredoka One, cursive"
+    },
+    "scale": {
+      "h1": "text-4xl font-bold tracking-tight",
+      "h2": "text-3xl font-bold",
+      "h3": "text-2xl font-semibold",
+      "body_lg": "text-lg leading-relaxed",
+      "body_base": "text-base leading-relaxed",
+      "caption": "text-sm text-white/60"
+    },
+    "rules": {
+      "headings_color": "text-[#F5EFD9]",
+      "gold_highlight": "text-transparent bg-clip-text bg-gradient-to-r from-[#C9A84C] to-[#F2D06B]"
+    }
+  },
+  "layout_system": {
+    "container": "max-w-md mx-auto min-h-screen bg-[#1B2042] overflow-hidden relative shadow-2xl",
+    "grid_strategy": "flex flex-col gap-6 px-6 py-8",
+    "mobile_first_rules": [
+      "All touch targets must be min 44px height",
+      "Bottom navigation bar for primary actions",
+      "Important content within 'thumb zone' (bottom 50% of screen)",
+      "Horizontal scroll for secondary lists (Themes, Badges)"
+    ],
+    "spacing": {
+      "section_gap": "gap-8",
+      "card_padding": "p-6",
+      "element_gap": "gap-4"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#FF6B35] hover:bg-[#FF8C5A] text-white font-bold py-4 px-8 rounded-full shadow-[0_4px_14px_rgba(255,107,53,0.4)] transform transition-all active:scale-95",
+      "secondary": "bg-transparent border-2 border-[#C9A84C] text-[#C9A84C] font-semibold py-3 px-6 rounded-full hover:bg-[#C9A84C]/10",
+      "ghost": "text-[#F5EFD9] hover:text-white hover:bg-white/5 py-2 px-4 rounded-lg"
+    },
+    "cards": {
+      "base": "bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden",
+      "interactive": "bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-colors cursor-pointer active:scale-[0.98]",
+      "highlight": "bg-gradient-to-br from-[#C9A84C]/20 to-transparent border border-[#C9A84C]/30"
+    },
+    "inputs": {
+      "field": "bg-[#0D1526]/50 border border-white/10 rounded-xl px-4 py-3 text-[#F5EFD9] placeholder:text-white/30 focus:border-[#C9A84C] focus:ring-1 focus:ring-[#C9A84C] transition-all outline-none"
+    }
+  },
+  "motion": {
+    "philosophy": "Fluid, playful, and rewarding. Every tap should feel like a small win.",
+    "libraries": ["framer-motion", "lucide-react"],
+    "presets": {
+      "fade_in": { "initial": { "opacity": 0 }, "animate": { "opacity": 1 }, "transition": { "duration": 0.5 } },
+      "slide_up": { "initial": { "y": 20, "opacity": 0 }, "animate": { "y": 0, "opacity": 1 } },
+      "pop": { "initial": { "scale": 0.9 }, "animate": { "scale": 1 }, "transition": { "type": "spring", "stiffness": 300 } },
+      "confetti_trigger": "Use canvas-confetti for win states"
+    }
+  },
+  "assets": {
+    "image_urls": {
+      "background_textures": [
+        "https://images.unsplash.com/photo-1761516659547-3000a0b1c0bd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwxfHxkYXJrJTIwYWZyaWNhbiUyMHBhdHRlcm4lMjB0ZXh0dXJlJTIwc2VhbWxlc3N8ZW58MHx8fHwxNzcyMTYyNjA4fDA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1700607125456-01e088395756?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzF8MHwxfHNlYXJjaHwyfHxkYXJrJTIwYWZyaWNhbiUyMHBhdHRlcm4lMjB0ZXh0dXJlJTIwc2VhbWxlc3N8ZW58MHx8fHwxNzcyMTYyNjA4fDA&ixlib=rb-4.1.0&q=85"
+      ],
+      "gamification_3d": [
+        "https://images.pexels.com/photos/12198525/pexels-photo-12198525.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "https://images.pexels.com/photos/6250969/pexels-photo-6250969.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "https://images.unsplash.com/photo-1754300681803-61eadeb79d10?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzh8MHwxfHNlYXJjaHwxfHwzZCUyMGdvbGQlMjB0cm9waHklMjBnYW1pZmljYXRpb24lMjBmbG9hdGluZ3xlbnwwfHx8fDE3NzIxNjI2MDh8MA&ixlib=rb-4.1.0&q=85"
+      ],
+      "onboarding_youth": [
+        "https://images.unsplash.com/photo-1680878898191-7c8a1e3b8180?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHw0fHxqb3lmdWwlMjBhZnJpY2FuJTIweW91dGglMjBsZWFybmluZyUyMHVzaW5nJTIwcGhvbmV8ZW58MHx8fHwxNzcyMTYyNjA5fDA&ixlib=rb-4.1.0&q=85",
+        "https://images.unsplash.com/photo-1680878903102-92692799ef36?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwzfHxqb3lmdWwlMjBhZnJpY2FuJTIweW91dGglMjBsZWFybmluZyUyMHVzaW5nJTIwcGhvbmV8ZW58MHx8fHwxNzcyMTYyNjA5fDA&ixlib=rb-4.1.0&q=85",
+         "https://images.unsplash.com/photo-1605896163420-830698e44fb1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwyfHxqb3lmdWwlMjBhZnJpY2FuJTIweW91dGglMjBsZWFybmluZyUyMHVzaW5nJTIwcGhvbmV8ZW58MHx8fHwxNzcyMTYyNjA5fDA&ixlib=rb-4.1.0&q=85"
+      ],
+       "cities_abstract": [
+        "https://images.pexels.com/photos/921290/pexels-photo-921290.png?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+       ]
+    },
+    "icon_strategy": "Use Lucide React icons. Stroke width 2px. Color: White or Gold (#C9A84C) depending on context."
+  },
+  "universal_guidelines": [
+    "ALWAYS use the mobile container constraint (max-w-md mx-auto) for all pages.",
+    "The default background is #1B2042. Do NOT use white backgrounds anywhere.",
+    "Use 'sonner' for all toast notifications.",
+    "Use 'framer-motion' for page transitions and micro-interactions.",
+    "Interactive elements MUST have `data-testid` attributes.",
+    "Do NOT use generic gradients. Use the specific brand gradients defined.",
+    "Buttons must have a pill shape (rounded-full) for the main CTA.",
+    "Cards should have a subtle glass effect (backdrop-blur-md bg-white/5).",
+    "Text must be readable on dark backgrounds (use #F5EFD9, not pure white)."
+  ],
+  "page_specific_rules": {
+    "onboarding": "Use full-height images with a gradient overlay (bottom to top) to ensure text readability. Gold accents for the 'Next' button.",
+    "dashboard": "Use a Bento-lite grid for stats. Horizontal scroll for 'Themes'. Highlight 'Daily Quiz' as the primary action.",
+    "quiz_game": "Clean interface. Question text large (text-2xl). Timer prominent (Gold). Answer options large and easy to tap.",
+    "leaderboard": "Top 3 users get special styling (Gold, Silver, Bronze glow). The rest of the list is a clean table/list."
+  },
+  "instructions_to_main_agent": "You are building a high-end, culturally resonant PWA. Do not cut corners on the 'feel'. The app should feel like a premium game, not a boring quiz. Use the provided image URLs to add texture and life to the backgrounds and onboarding. Strictly adhere to the color palette."
+}

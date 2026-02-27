@@ -971,12 +971,23 @@ async def apply_ambassador(data: AmbassadorApplication, request: Request):
 # Include the router in the main app
 app.include_router(api_router)
 
+# CORS configuration
+cors_origins_env = os.environ.get('CORS_ORIGINS', '*')
+if cors_origins_env == '*':
+    cors_origins = ['*']
+else:
+    # Split by comma and strip whitespace, filter out empty strings
+    cors_origins = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()]
+
+logger.info(f"CORS origins configured: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
+    allow_origins=cors_origins,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Configure logging

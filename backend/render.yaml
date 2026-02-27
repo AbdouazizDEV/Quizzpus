@@ -12,6 +12,8 @@ services:
       - key: DB_NAME
         value: quizzplus
       - key: CORS_ORIGINS
-        value: https://frontend-rho-henna.vercel.app,https://frontend-gfn1pzz0b-abdou-aziz-diops-projects.vercel.app,http://localhost:3000
+        value: "*"
+        # ⚠️ Pour la production, remplace '*' par les URLs exactes séparées par des virgules :
+        # https://frontend-rho-henna.vercel.app,https://frontend-gfn1pzz0b-abdou-aziz-diops-projects.vercel.app,http://localhost:3000
       - key: PYTHON_VERSION
         value: 3.11.0

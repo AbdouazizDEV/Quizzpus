@@ -20,6 +20,17 @@ const QuizGame = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [startTime, setStartTime] = useState(0);
 
+  const fetchQuiz = async () => {
+    try {
+      const response = await getThemeQuiz(themeId);
+      setQuestions(response.data);
+      setLoading(false);
+    } catch (error) {
+      toast.error('Erreur de chargement du quizz');
+      navigate('/quiz');
+    }
+  };
+
   useEffect(() => {
     // Si aucun thème valide, rediriger vers la sélection de quizz
     if (!themeId || themeId === 'undefined') {
@@ -28,6 +39,7 @@ const QuizGame = () => {
       return;
     }
     fetchQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [themeId]);
 
   useEffect(() => {
@@ -39,17 +51,6 @@ const QuizGame = () => {
       setStartTime(Date.now());
     }
   }, [countdown, gameStarted]);
-
-  const fetchQuiz = async () => {
-    try {
-      const response = await getThemeQuiz(themeId);
-      setQuestions(response.data);
-      setLoading(false);
-    } catch (error) {
-      toast.error('Erreur de chargement du quizz');
-      navigate('/quiz');
-    }
-  };
 
   const handleAnswer = (answer) => {
     if (showFeedback) return;

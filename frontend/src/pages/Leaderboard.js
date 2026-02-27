@@ -13,10 +13,6 @@ const Leaderboard = () => {
   const [userRank, setUserRank] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [tab]);
-
   const fetchLeaderboard = async () => {
     setLoading(true);
     try {
@@ -35,6 +31,11 @@ const Leaderboard = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchLeaderboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   const tabs = [
     { id: 'global', label: '🌍 Mondial' },

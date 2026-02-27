@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: quizzplus-backend
+    env: python
+    buildCommand: pip install -r requirements-prod.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: MONGO_URL
+        sync: false
+      - key: DB_NAME
+        value: quizzplus
+      - key: CORS_ORIGINS
+        value: https://frontend-rho-henna.vercel.app,https://frontend-gfn1pzz0b-abdou-aziz-diops-projects.vercel.app,http://localhost:3000
+      - key: PYTHON_VERSION
+        value: 3.11

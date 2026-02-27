@@ -968,6 +968,13 @@ async def apply_ambassador(data: AmbassadorApplication, request: Request):
     
     return {"message": "Application submitted"}
 
+# Configure logging first (before using logger)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # CORS configuration (must be before including routers)
 cors_origins_env = os.environ.get('CORS_ORIGINS', '*')
 if cors_origins_env == '*':
@@ -993,13 +1000,6 @@ app.add_middleware(
 
 # Include the router in the main app (after CORS middleware)
 app.include_router(api_router)
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

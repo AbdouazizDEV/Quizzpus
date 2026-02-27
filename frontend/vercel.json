@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "installCommand": "yarn install --legacy-peer-deps",
   "buildCommand": "yarn build",
   "outputDirectory": "build",
   "routes": [

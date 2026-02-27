@@ -285,6 +285,12 @@ async def check_and_award_badges(user_id: str):
 
 # ============= AUTH ROUTES =============
 
+# Handle OPTIONS requests for CORS preflight
+@api_router.options("/{path:path}")
+async def options_handler(path: str):
+    """Handle CORS preflight requests"""
+    return Response(status_code=200)
+
 @api_router.post("/auth/register")
 async def register(data: UserRegister, response: Response):
     """Email/Password registration"""
@@ -991,6 +997,9 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+# Include the router in the main app (after CORS middleware)
+app.include_router(api_router)
 
 # Configure logging
 logging.basicConfig(

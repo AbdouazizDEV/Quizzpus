@@ -972,10 +972,7 @@ async def apply_ambassador(data: AmbassadorApplication, request: Request):
     
     return {"message": "Application submitted"}
 
-# Include the router in the main app
-app.include_router(api_router)
-
-# CORS configuration
+# CORS configuration (must be before including routers)
 cors_origins_env = os.environ.get('CORS_ORIGINS', '*')
 if cors_origins_env == '*':
     # When using '*', we can't use allow_credentials=True

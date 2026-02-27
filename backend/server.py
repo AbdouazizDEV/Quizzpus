@@ -974,16 +974,20 @@ app.include_router(api_router)
 # CORS configuration
 cors_origins_env = os.environ.get('CORS_ORIGINS', '*')
 if cors_origins_env == '*':
+    # When using '*', we can't use allow_credentials=True
+    # So we'll allow all origins explicitly
     cors_origins = ['*']
+    allow_creds = False
 else:
     # Split by comma and strip whitespace, filter out empty strings
     cors_origins = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()]
+    allow_creds = True
 
-logger.info(f"CORS origins configured: {cors_origins}")
+logger.info(f"CORS origins configured: {cors_origins}, allow_credentials: {allow_creds}")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
+    allow_credentials=allow_creds,
     allow_origins=cors_origins,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],

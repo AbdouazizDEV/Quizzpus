@@ -164,6 +164,18 @@ const Profile = () => {
         {/* Quick Actions */}
         <div className="mt-8 space-y-3">
           <button
+            onClick={() => navigate('/community')}
+            className="w-full glass-card-hover p-4 flex items-center gap-4"
+            data-testid="community-button"
+          >
+            <Users size={24} className="text-[#C9A84C]" />
+            <div className="flex-1 text-left">
+              <p className="font-semibold text-[#F5EFD9]">Rejoindre la communauté</p>
+              <p className="text-sm text-[#F5EFD9]/60">WhatsApp, Discord, entretiens</p>
+            </div>
+          </button>
+
+          <button
             onClick={() => navigate('/invite')}
             className="w-full glass-card-hover p-4 flex items-center gap-4"
             data-testid="invite-friends-button"

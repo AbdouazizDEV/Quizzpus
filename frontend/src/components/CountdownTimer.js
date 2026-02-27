@@ -3,10 +3,15 @@ import { X, Clock } from 'lucide-react';
 
 const CountdownTimer = ({ seconds, onExpire }) => {
   const [timeLeft, setTimeLeft] = React.useState(seconds);
+  const hasExpiredRef = React.useRef(false);
 
   React.useEffect(() => {
+    // Empêcher les appels multiples de onExpire qui créent une boucle infinie
     if (timeLeft <= 0) {
-      onExpire?.();
+      if (!hasExpiredRef.current) {
+        hasExpiredRef.current = true;
+        onExpire?.();
+      }
       return;
     }
 

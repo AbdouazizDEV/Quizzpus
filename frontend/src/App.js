@@ -23,6 +23,7 @@ import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
 import InviteFriends from './pages/InviteFriends';
 import Premium from './pages/Premium';
+import Community from './pages/Community';
 
 import './App.css';
 
@@ -139,6 +140,14 @@ function AppRouter() {
         element={
           <ProtectedRoute>
             <Premium />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/community"
+        element={
+          <ProtectedRoute>
+            <Community />
           </ProtectedRoute>
         }
       />

@@ -31,6 +31,27 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     checkAuth();
+    
+    // Synchroniser les données de profil en attente après authentification
+    const syncPendingProfile = async () => {
+      const pending = localStorage.getItem('pending_profile_update');
+      if (pending) {
+        try {
+          const profileData = JSON.parse(pending);
+          const response = await axios.put(`${API_URL}/user/profile`, profileData, {
+            withCredentials: true
+          });
+          setUser(response.data);
+          localStorage.removeItem('pending_profile_update');
+          console.log('Profil synchronisé avec succès');
+        } catch (error) {
+          console.error('Échec de la synchronisation du profil:', error);
+        }
+      }
+    };
+    
+    // Attendre que l'auth soit vérifiée avant de synchroniser
+    setTimeout(syncPendingProfile, 1000);
   }, [checkAuth]);
 
   const login = async (email, password) => {

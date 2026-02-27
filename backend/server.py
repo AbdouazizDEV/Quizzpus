@@ -268,7 +268,7 @@ async def check_and_award_badges(user_id: str):
 # ============= AUTH ROUTES =============
 
 @api_router.post("/auth/register")
-async def register(data: UserRegister):
+async def register(data: UserRegister, response: Response):
     """Email/Password registration"""
     # Check if user exists
     existing = await db.users.find_one({"email": data.email})
@@ -306,6 +306,17 @@ async def register(data: UserRegister):
     }
     await db.user_sessions.insert_one(session_doc)
     
+    # Set httpOnly cookie for session (dev-friendly: secure=False for localhost)
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=7*24*60*60,
+        path="/"
+    )
+    
     # Return user without password
     user_doc.pop("password", None)
     user_doc.pop("_id", None)
@@ -313,7 +324,7 @@ async def register(data: UserRegister):
     return {"user": user_doc, "session_token": session_token}
 
 @api_router.post("/auth/login")
-async def login(data: UserLogin):
+async def login(data: UserLogin, response: Response):
     """Email/Password login"""
     user_doc = await db.users.find_one({"email": data.email})
     if not user_doc:
@@ -331,6 +342,17 @@ async def login(data: UserLogin):
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.user_sessions.insert_one(session_doc)
+    
+    # Set httpOnly cookie for session (dev-friendly: secure=False for localhost)
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=7*24*60*60,
+        path="/"
+    )
     
     # Update streak
     await update_streak(user_doc["user_id"])
@@ -799,6 +821,152 @@ async def mark_notification_read(notif_id: str, request: Request):
     )
     
     return {"message": "Marked as read"}
+
+# ============= FEEDBACK ROUTES =============
+
+class FeedbackSubmission(BaseModel):
+    rating: int = Field(..., ge=1, le=5)
+    liked_features: List[str]
+    missing_features: Optional[str] = None
+    would_recommend: str  # "yes", "maybe", "no"
+
+@api_router.post("/feedback")
+async def submit_feedback(data: FeedbackSubmission, request: Request):
+    """Submit user feedback"""
+    user = await get_current_user(request)
+    
+    feedback_doc = {
+        "feedback_id": f"feedback_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "rating": data.rating,
+        "liked_features": data.liked_features,
+        "missing_features": data.missing_features,
+        "would_recommend": data.would_recommend,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.feedbacks.insert_one(feedback_doc)
+    
+    # Marquer que l'utilisateur a soumis son feedback
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$set": {"feedback_submitted": True}}
+    )
+    
+    # Bonus de points
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$inc": {"points": 5}}
+    )
+    
+    return {"message": "Feedback submitted", "points_earned": 5}
+
+# ============= PREMIUM & PARTNERSHIPS ROUTES =============
+
+class PremiumWaitlist(BaseModel):
+    email: EmailStr
+
+@api_router.post("/premium/waitlist")
+async def join_premium_waitlist(data: PremiumWaitlist, request: Request):
+    """Join premium waitlist"""
+    user = await get_current_user(request)
+    
+    waitlist_doc = {
+        "waitlist_id": f"waitlist_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "email": data.email,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.premium_waitlist.insert_one(waitlist_doc)
+    
+    return {"message": "Added to waitlist"}
+
+class PartnerRequest(BaseModel):
+    company_name: str
+    sector: str
+    email: EmailStr
+    phone: Optional[str] = None
+    estimated_budget: Optional[str] = None
+    message: Optional[str] = None
+
+@api_router.post("/partners/request")
+async def submit_partner_request(data: PartnerRequest, request: Request):
+    """Submit partnership request"""
+    user = await get_current_user(request)
+    
+    partner_doc = {
+        "request_id": f"partner_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "company_name": data.company_name,
+        "sector": data.sector,
+        "email": data.email,
+        "phone": data.phone,
+        "estimated_budget": data.estimated_budget,
+        "message": data.message,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.partner_requests.insert_one(partner_doc)
+    
+    return {"message": "Partnership request submitted"}
+
+class EnterpriseLead(BaseModel):
+    name: str
+    company: str
+    team_size: str  # "1-10", "11-50", "51-200", "200+"
+    email: EmailStr
+    phone: Optional[str] = None
+    needs: Optional[str] = None
+
+@api_router.post("/enterprise/lead")
+async def submit_enterprise_lead(data: EnterpriseLead, request: Request):
+    """Submit enterprise lead"""
+    user = await get_current_user(request)
+    
+    lead_doc = {
+        "lead_id": f"enterprise_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "name": data.name,
+        "company": data.company,
+        "team_size": data.team_size,
+        "email": data.email,
+        "phone": data.phone,
+        "needs": data.needs,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.enterprise_leads.insert_one(lead_doc)
+    
+    return {"message": "Enterprise lead submitted"}
+
+class AmbassadorApplication(BaseModel):
+    first_name: str
+    university: str
+    city: str
+    email: EmailStr
+    motivation: str
+
+@api_router.post("/ambassadors/apply")
+async def apply_ambassador(data: AmbassadorApplication, request: Request):
+    """Apply for campus ambassador program"""
+    user = await get_current_user(request)
+    
+    application_doc = {
+        "application_id": f"ambassador_{uuid.uuid4().hex[:12]}",
+        "user_id": user["user_id"],
+        "first_name": data.first_name,
+        "university": data.university,
+        "city": data.city,
+        "email": data.email,
+        "motivation": data.motivation,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "status": "pending"
+    }
+    
+    await db.ambassadors.insert_one(application_doc)
+    
+    return {"message": "Application submitted"}
 
 # Include the router in the main app
 app.include_router(api_router)

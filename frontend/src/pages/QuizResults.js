@@ -4,17 +4,23 @@ import { motion } from 'framer-motion';
 import { Trophy, Star, Share2, Home, RotateCcw, TrendingUp } from 'lucide-react';
 import { triggerConfetti, triggerStars } from '../utils/helpers';
 import { toast } from 'sonner';
+import { useFeedbackTrigger } from '../hooks/useFeedbackTrigger';
 
 const QuizResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { results, themeId } = location.state || {};
+  const { FeedbackComponent } = useFeedbackTrigger();
 
   useEffect(() => {
     if (!results) {
       navigate('/quiz');
       return;
     }
+
+    // Incrémenter le compteur de parties complétées
+    const currentCount = parseInt(localStorage.getItem('completed_quizzes') || '0', 10);
+    localStorage.setItem('completed_quizzes', (currentCount + 1).toString());
 
     if (results.perfect_score) {
       triggerStars();
@@ -122,7 +128,14 @@ const QuizResults = () => {
           
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => navigate(`/quiz/${themeId}/play`)}
+              onClick={() => {
+                if (themeId) {
+                  navigate(`/quiz/${themeId}/play`);
+                } else {
+                  // Fallback si on arrive sur cette page sans thème (ex: refresh direct)
+                  navigate('/quiz');
+                }
+              }}
               className="secondary-button py-3 flex items-center justify-center gap-2"
               data-testid="replay-quiz-button"
             >
@@ -149,6 +162,8 @@ const QuizResults = () => {
           </button>
         </div>
       </motion.div>
+      
+      <FeedbackComponent />
     </div>
   );
 };

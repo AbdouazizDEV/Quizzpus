@@ -33,3 +33,12 @@ export const markNotificationRead = (notifId) => api.put(`/notifications/${notif
 
 // Auth
 export const exchangeSession = (sessionId) => api.post('/auth/session', { session_id: sessionId });
+
+// Feedback
+export const submitFeedback = (data) => api.post('/feedback', data);
+
+// Premium & Partnerships
+export const joinPremiumWaitlist = (email) => api.post('/premium/waitlist', { email });
+export const submitPartnerRequest = (data) => api.post('/partners/request', data);
+export const submitEnterpriseLead = (data) => api.post('/enterprise/lead', data);
+export const applyAmbassador = (data) => api.post('/ambassadors/apply', data);

@@ -59,18 +59,63 @@ const WelcomeOnboarding = () => {
 
   const handleComplete = async () => {
     setLoading(true);
+    
+    // Sauvegarder en localStorage comme fallback
+    const profileData = {
+      country: selectedCountry,
+      favorite_themes: selectedThemes,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('pending_profile_update', JSON.stringify(profileData));
+    
+    // Mettre à jour le contexte local immédiatement
+    const updatedUser = {
+      ...user,
+      country: selectedCountry,
+      favorite_themes: selectedThemes
+    };
+    updateUser(updatedUser);
+    
     try {
+      // Tentative de sauvegarde API
       const response = await updateUserProfile({
         country: selectedCountry,
         favorite_themes: selectedThemes
       });
+      
+      // Succès : mettre à jour avec les données du serveur
       updateUser(response.data);
+      localStorage.removeItem('pending_profile_update');
       toast.success('Profil complété !');
-      navigate('/dashboard');
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour');
+      // Erreur API : logger pour debug mais ne pas bloquer
+      console.error('Erreur API lors de la mise à jour du profil:', {
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        data: profileData
+      });
+      
+      // Afficher un message informatif mais pas bloquant
+      toast.warning('Profil sauvegardé localement. Synchronisation en cours...');
+      
+      // Retry en arrière-plan après 2 secondes
+      setTimeout(async () => {
+        try {
+          const retryResponse = await updateUserProfile({
+            country: selectedCountry,
+            favorite_themes: selectedThemes
+          });
+          updateUser(retryResponse.data);
+          localStorage.removeItem('pending_profile_update');
+          console.log('Profil synchronisé avec succès');
+        } catch (retryError) {
+          console.error('Échec du retry de synchronisation:', retryError);
+        }
+      }, 2000);
     } finally {
       setLoading(false);
+      // TOUJOURS naviguer vers le dashboard, même en cas d'erreur
+      navigate('/dashboard');
     }
   };
 

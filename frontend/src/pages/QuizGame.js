@@ -21,6 +21,12 @@ const QuizGame = () => {
   const [startTime, setStartTime] = useState(0);
 
   useEffect(() => {
+    // Si aucun thème valide, rediriger vers la sélection de quizz
+    if (!themeId || themeId === 'undefined') {
+      toast.error('Aucun thème sélectionné. Choisis un quizz pour commencer.');
+      navigate('/quiz');
+      return;
+    }
     fetchQuiz();
   }, [themeId]);
 

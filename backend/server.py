@@ -434,10 +434,6 @@ async def exchange_session(data: SessionExchangeRequest, response: Response):
         
         # Set httpOnly cookie
         set_session_cookie(response, session_token)
-        # Note: samesite is set to "lax" in the helper function
-            max_age=7*24*60*60,
-            path="/"
-        )
         
         # Get fresh user data
         user_doc = await db.users.find_one({"user_id": user_id}, {"_id": 0, "password": 0})

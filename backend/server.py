@@ -25,6 +25,24 @@ db = client[os.environ['DB_NAME']]
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# Helper function to set session cookie
+def set_session_cookie(response: Response, session_token: str):
+    """Set httpOnly session cookie with appropriate secure flag"""
+    # Detect if we're in production (HTTPS) or development (HTTP)
+    # Render uses HTTPS, localhost uses HTTP
+    is_https = os.environ.get('RENDER', 'false').lower() == 'true' or \
+               os.environ.get('ENVIRONMENT', 'development') == 'production'
+    
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=is_https,  # True for HTTPS (production), False for HTTP (local)
+        samesite="lax",
+        max_age=7*24*60*60,
+        path="/"
+    )
+
 # Create the main app without a prefix
 app = FastAPI()
 
@@ -306,16 +324,8 @@ async def register(data: UserRegister, response: Response):
     }
     await db.user_sessions.insert_one(session_doc)
     
-    # Set httpOnly cookie for session (dev-friendly: secure=False for localhost)
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=7*24*60*60,
-        path="/"
-    )
+    # Set httpOnly cookie for session
+    set_session_cookie(response, session_token)
     
     # Return user without password
     user_doc.pop("password", None)
@@ -343,16 +353,8 @@ async def login(data: UserLogin, response: Response):
     }
     await db.user_sessions.insert_one(session_doc)
     
-    # Set httpOnly cookie for session (dev-friendly: secure=False for localhost)
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=7*24*60*60,
-        path="/"
-    )
+    # Set httpOnly cookie for session
+    set_session_cookie(response, session_token)
     
     # Update streak
     await update_streak(user_doc["user_id"])
@@ -425,12 +427,8 @@ async def exchange_session(data: SessionExchangeRequest, response: Response):
         await update_streak(user_id)
         
         # Set httpOnly cookie
-        response.set_cookie(
-            key="session_token",
-            value=session_token,
-            httponly=True,
-            secure=True,
-            samesite="none",
+        set_session_cookie(response, session_token)
+        # Note: samesite is set to "lax" in the helper function
             max_age=7*24*60*60,
             path="/"
         )

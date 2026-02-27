@@ -14,7 +14,7 @@
 3. Créer un cluster M0 (gratuit)
 4. **Database Access** → Créer un utilisateur :
    - Username : `quizzplus`
-   - Password : Générer un mot de passe fort
+   - Password : Générer un mot de passe fort RuHIdyuQ5nzQiy55
    - Database User Privileges : `Read and write to any database`
 5. **Network Access** → Add IP Address → `0.0.0.0/0` (Allow from anywhere)
 6. **Clusters** → Connect → "Connect your application"
@@ -39,10 +39,10 @@
    ```
 5. **Variables d'environnement** :
    ```
-   MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/quizzplus
+   MONGO_URL=mongodb+srv://quizzplus:RuHIdyuQ5nzQiy55@cluster0.wc4axiq.mongodb.net/quizzplus
    DB_NAME=quizzplus
    CORS_ORIGINS=https://frontend-rho-henna.vercel.app,https://frontend-gfn1pzz0b-abdou-aziz-diops-projects.vercel.app,http://localhost:3000
-   PYTHON_VERSION=3.11
+   PYTHON_VERSION=3.11.0
    ```
 6. Cliquer sur **"Create Web Service"**
 7. Attendre 5-10 minutes pour le build et déploiement

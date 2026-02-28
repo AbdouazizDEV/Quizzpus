@@ -33,12 +33,23 @@ def set_session_cookie(response: Response, session_token: str):
     is_https = os.environ.get('RENDER', 'false').lower() == 'true' or \
                os.environ.get('ENVIRONMENT', 'development') == 'production'
     
+    # For cross-origin requests (production), we need SameSite="none" with secure=True
+    # For same-origin requests (local), we can use SameSite="lax" with secure=False
+    if is_https:
+        # Production: cross-origin cookies require SameSite="none" and secure=True
+        samesite = "none"
+        secure = True
+    else:
+        # Local development: same-origin, can use lax
+        samesite = "lax"
+        secure = False
+    
     response.set_cookie(
         key="session_token",
         value=session_token,
         httponly=True,
-        secure=is_https,  # True for HTTPS (production), False for HTTP (local)
-        samesite="lax",
+        secure=secure,
+        samesite=samesite,
         max_age=7*24*60*60,
         path="/"
     )

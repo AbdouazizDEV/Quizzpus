@@ -16,3 +16,6 @@ services:
         # ⚠️ Liste toutes les URLs du frontend séparées par des virgules (sans espaces)
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: RENDER
+        value: "true"
+        # ⚠️ Cette variable permet au backend de détecter qu'il est en production

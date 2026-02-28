@@ -1012,6 +1012,31 @@ app.add_middleware(
 # Include the router in the main app (after CORS middleware)
 app.include_router(api_router)
 
+@app.on_event("startup")
+async def startup_event():
+    """Vérifier et seed la base de données au démarrage si nécessaire"""
+    try:
+        theme_count = await db.quiz_themes.count_documents({})
+        if theme_count == 0:
+            logger.info("🌱 Aucun thème trouvé. Lancement des seeders...")
+            # Importer et exécuter seed_data de manière asynchrone
+            from seed_data import seed_themes, seed_questions, seed_fun_facts, seed_badges, seed_demo_users
+            
+            await seed_themes()
+            await seed_questions()
+            await seed_fun_facts()
+            await seed_badges()
+            await seed_demo_users()
+            
+            logger.info("✅ Seeders terminés avec succès!")
+        else:
+            logger.info(f"✅ Base de données déjà initialisée ({theme_count} thèmes trouvés)")
+    except Exception as e:
+        logger.error(f"❌ Erreur lors du seeding au démarrage: {e}")
+        import traceback
+        traceback.print_exc()
+        # Ne pas bloquer le démarrage du serveur en cas d'erreur
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()

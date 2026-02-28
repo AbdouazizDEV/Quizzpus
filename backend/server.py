@@ -26,16 +26,31 @@ db = client[os.environ['DB_NAME']]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Helper function to set session cookie
-def set_session_cookie(response: Response, session_token: str):
+def set_session_cookie(response: Response, session_token: str, request: Request = None):
     """Set httpOnly session cookie with appropriate secure flag"""
     # Detect if we're in production (HTTPS) or development (HTTP)
-    # Render uses HTTPS, localhost uses HTTP
-    is_https = os.environ.get('RENDER', 'false').lower() == 'true' or \
-               os.environ.get('ENVIRONMENT', 'development') == 'production'
+    # Multiple ways to detect production:
+    # 1. RENDER environment variable (set by Render)
+    # 2. ENVIRONMENT variable
+    # 3. Check if we're on onrender.com domain (more reliable)
+    # 4. Check if request is HTTPS (most reliable)
+    
+    is_production = False
+    
+    # Check environment variables
+    if os.environ.get('RENDER', 'false').lower() == 'true' or \
+       os.environ.get('ENVIRONMENT', 'development') == 'production':
+        is_production = True
+    
+    # Check request URL if available (most reliable)
+    if request and hasattr(request, 'url'):
+        request_url = str(request.url)
+        if request_url.startswith('https://') or 'onrender.com' in request_url:
+            is_production = True
     
     # For cross-origin requests (production), we need SameSite="none" with secure=True
     # For same-origin requests (local), we can use SameSite="lax" with secure=False
-    if is_https:
+    if is_production:
         # Production: cross-origin cookies require SameSite="none" and secure=True
         samesite = "none"
         secure = True
@@ -303,7 +318,7 @@ async def options_handler(path: str):
     return Response(status_code=200)
 
 @api_router.post("/auth/register")
-async def register(data: UserRegister, response: Response):
+async def register(data: UserRegister, response: Response, request: Request):
     """Email/Password registration"""
     # Check if user exists
     existing = await db.users.find_one({"email": data.email})
@@ -342,7 +357,7 @@ async def register(data: UserRegister, response: Response):
     await db.user_sessions.insert_one(session_doc)
     
     # Set httpOnly cookie for session
-    set_session_cookie(response, session_token)
+    set_session_cookie(response, session_token, request)
     
     # Return user without password
     user_doc.pop("password", None)
@@ -351,7 +366,7 @@ async def register(data: UserRegister, response: Response):
     return {"user": user_doc, "session_token": session_token}
 
 @api_router.post("/auth/login")
-async def login(data: UserLogin, response: Response):
+async def login(data: UserLogin, response: Response, request: Request):
     """Email/Password login"""
     user_doc = await db.users.find_one({"email": data.email})
     if not user_doc:
@@ -371,7 +386,7 @@ async def login(data: UserLogin, response: Response):
     await db.user_sessions.insert_one(session_doc)
     
     # Set httpOnly cookie for session
-    set_session_cookie(response, session_token)
+    set_session_cookie(response, session_token, request)
     
     # Update streak
     await update_streak(user_doc["user_id"])
@@ -383,7 +398,7 @@ async def login(data: UserLogin, response: Response):
     return {"user": user_doc, "session_token": session_token}
 
 @api_router.post("/auth/session")
-async def exchange_session(data: SessionExchangeRequest, response: Response):
+async def exchange_session(data: SessionExchangeRequest, response: Response, request: Request):
     """Exchange session_id from OAuth for session_token"""
     try:
         # Call Emergent Auth API

@@ -11,7 +11,21 @@ export const api = axios.create({
 export const getThemes = () => api.get('/themes');
 export const getThemeQuiz = (themeId) => api.get(`/themes/${themeId}/quiz`);
 export const getDailyQuiz = () => api.get('/quiz/daily');
-export const submitQuiz = (data) => api.post('/quiz/submit', data);
+export const submitQuiz = (data) => api.post('/quiz/submit', data); // Legacy endpoint
+
+// New Quiz System
+export const startQuiz = (themeId) => api.post('/quiz/start', { theme_id: themeId });
+export const validateAnswer = (sessionId, questionId, answer, timeTaken) => 
+  api.post('/quiz/validate-answer', {
+    session_id: sessionId,
+    question_id: questionId,
+    answer: answer,
+    time_taken: timeTaken
+  });
+export const finishQuiz = (sessionId) => {
+  // Backend expects session_id as query param or body - checking backend implementation
+  return api.post('/quiz/finish', { session_id: sessionId });
+};
 
 // User
 export const getUserProfile = () => api.get('/user/profile');

@@ -1,28 +1,44 @@
 import React from 'react';
 import { X, Clock } from 'lucide-react';
 
-const CountdownTimer = ({ seconds, onExpire }) => {
-  const [timeLeft, setTimeLeft] = React.useState(seconds);
+const CountdownTimer = ({ seconds, timeLeft, onExpire }) => {
+  // If timeLeft is provided externally, use it; otherwise manage internally
+  const [internalTimeLeft, setInternalTimeLeft] = React.useState(seconds);
   const hasExpiredRef = React.useRef(false);
+  const isControlled = timeLeft !== undefined;
+
+  const currentTimeLeft = isControlled ? timeLeft : internalTimeLeft;
 
   React.useEffect(() => {
     // Empêcher les appels multiples de onExpire qui créent une boucle infinie
-    if (timeLeft <= 0) {
+    if (currentTimeLeft <= 0) {
       if (!hasExpiredRef.current) {
         hasExpiredRef.current = true;
         onExpire?.();
       }
       return;
+    } else {
+      hasExpiredRef.current = false;
     }
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
+    // Only manage timer internally if not controlled
+    if (!isControlled) {
+      const timer = setInterval(() => {
+        setInternalTimeLeft((prev) => prev - 1);
+      }, 1000);
 
-    return () => clearInterval(timer);
-  }, [timeLeft, onExpire]);
+      return () => clearInterval(timer);
+    }
+  }, [currentTimeLeft, onExpire, isControlled]);
 
-  const percentage = (timeLeft / seconds) * 100;
+  // Reset expired flag when timeLeft resets
+  React.useEffect(() => {
+    if (currentTimeLeft === seconds) {
+      hasExpiredRef.current = false;
+    }
+  }, [currentTimeLeft, seconds]);
+
+  const percentage = (currentTimeLeft / seconds) * 100;
   const circumference = 2 * Math.PI * 40;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
@@ -58,7 +74,7 @@ const CountdownTimer = ({ seconds, onExpire }) => {
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="text-lg font-bold text-[#F5EFD9]" data-testid="timer-value">
-          {timeLeft}
+          {currentTimeLeft}
         </span>
       </div>
     </div>

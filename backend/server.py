@@ -141,6 +141,9 @@ class AnswerValidation(BaseModel):
     answer: str
     time_taken: int  # seconds taken to answer this question (max 10)
 
+class FinishQuizRequest(BaseModel):
+    session_id: str
+
 class QuizResult(BaseModel):
     model_config = ConfigDict(extra="ignore")
     result_id: str
@@ -791,13 +794,13 @@ async def validate_answer(data: AnswerValidation, request: Request):
     return response
 
 @api_router.post("/quiz/finish")
-async def finish_quiz(session_id: str, request: Request):
+async def finish_quiz(data: FinishQuizRequest, request: Request):
     """Finish quiz and calculate final score with bonuses"""
     user = await get_current_user(request)
     
     # Get quiz session
     session = await db.quiz_sessions.find_one(
-        {"session_id": session_id, "user_id": user["user_id"]},
+        {"session_id": data.session_id, "user_id": user["user_id"]},
         {"_id": 0}
     )
     
@@ -836,7 +839,7 @@ async def finish_quiz(session_id: str, request: Request):
         "time_taken": int(total_time),
         "date": datetime.now(timezone.utc).isoformat(),
         "perfect_score": perfect_score,
-        "session_id": session_id
+        "session_id": data.session_id
     }
     await db.user_quiz_results.insert_one(result_doc)
     

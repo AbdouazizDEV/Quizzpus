@@ -96,22 +96,25 @@ const QuizGame = () => {
     setCurrentScore(data.current_score || 0);
     setTotalPoints(data.total_points || 0);
     
-    // Show feedback after a small delay to ensure state is updated
-    setTimeout(() => {
-      setShowFeedback(true);
-      setIsValidating(false);
-      console.log('👁️ Feedback should now be visible');
-    }, 50);
+    // Show feedback immediately
+    setShowFeedback(true);
+    setIsValidating(false);
+    console.log('👁️ Feedback should now be visible');
     
-    // Auto-advance after minimum 2 seconds (changed from 4 to ensure visibility)
+    // Clear any existing timeout
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    
+    // Auto-advance after minimum 2.5 seconds (ensures feedback is visible for at least 2 seconds)
     feedbackTimeoutRef.current = setTimeout(() => {
-      console.log('⏭️ Auto-advancing to next question');
+      console.log('⏭️ Auto-advancing to next question after 2.5s');
       if (data.is_complete) {
         finishQuizSession();
       } else {
         moveToNextQuestion();
       }
-    }, 2000);
+    }, 2500);
   }, [finishQuizSession, moveToNextQuestion]);
 
   // Handle time expired

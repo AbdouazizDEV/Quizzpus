@@ -105,19 +105,22 @@ const QuizGame = () => {
     setCurrentScore(data.current_score || 0);
     setTotalPoints(data.total_points || 0);
     
+    // Clear any existing timeout first
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+      feedbackTimeoutRef.current = null;
+    }
+    
     // Show feedback immediately
     setShowFeedback(true);
     setIsValidating(false);
-    console.log('👁️ Feedback should now be visible');
-    
-    // Clear any existing timeout
-    if (feedbackTimeoutRef.current) {
-      clearTimeout(feedbackTimeoutRef.current);
-    }
+    console.log('👁️ Feedback should now be visible at', new Date().toISOString());
     
     // Auto-advance after minimum 2.5 seconds (ensures feedback is visible for at least 2 seconds)
+    const startTime = Date.now();
     feedbackTimeoutRef.current = setTimeout(() => {
-      console.log('⏭️ Auto-advancing to next question after 2.5s');
+      const elapsed = Date.now() - startTime;
+      console.log(`⏭️ Auto-advancing to next question after ${elapsed}ms (should be ~2500ms)`);
       if (data.is_complete) {
         finishQuizSession();
       } else {
@@ -234,12 +237,14 @@ const QuizGame = () => {
     }
   };
 
-  // Start timer when question changes
+  // Start timer when question changes (only if feedback is not showing)
   useEffect(() => {
-    if (gameStarted && questions.length > 0 && currentIndex < questions.length) {
+    // Don't start timer if feedback is showing or if we're still validating
+    if (gameStarted && questions.length > 0 && currentIndex < questions.length && !showFeedback && !isValidating) {
+      console.log('⏱️ Starting timer for question', currentIndex + 1);
       startQuestionTimer();
     }
-  }, [currentIndex, gameStarted, questions.length, startQuestionTimer]);
+  }, [currentIndex, gameStarted, questions.length, startQuestionTimer, showFeedback, isValidating]);
 
   // Cleanup on unmount
   useEffect(() => {

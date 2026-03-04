@@ -310,43 +310,76 @@ const QuizGame = () => {
             {/* Feedback Display */}
             {showFeedback && feedbackData && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`mb-6 p-4 rounded-xl ${
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className={`mb-6 p-5 rounded-xl shadow-lg ${
                   feedbackData.isCorrect 
-                    ? 'bg-green-500/20 border-2 border-green-500' 
-                    : 'bg-red-500/20 border-2 border-red-500'
+                    ? 'bg-green-500/30 border-2 border-green-400 shadow-green-500/20' 
+                    : 'bg-red-500/30 border-2 border-red-400 shadow-red-500/20'
                 }`}
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-4">
                   {feedbackData.isCorrect ? (
-                    <CheckCircle className="text-green-500 flex-shrink-0 mt-1" size={24} />
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring" }}
+                    >
+                      <CheckCircle className="text-green-400 flex-shrink-0 mt-1" size={32} strokeWidth={2.5} />
+                    </motion.div>
                   ) : (
-                    <XCircle className="text-red-500 flex-shrink-0 mt-1" size={24} />
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2, type: "spring" }}
+                    >
+                      <XCircle className="text-red-400 flex-shrink-0 mt-1" size={32} strokeWidth={2.5} />
+                    </motion.div>
                   )}
                   <div className="flex-1">
-                    <p className={`font-bold text-lg mb-2 ${
-                      feedbackData.isCorrect ? 'text-green-400' : 'text-red-400'
-                    }`}>
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.1 }}
+                      className={`font-bold text-xl mb-3 ${
+                        feedbackData.isCorrect ? 'text-green-300' : 'text-red-300'
+                      }`}
+                    >
                       {feedbackData.isCorrect ? '✅ Correct !' : '❌ Incorrect'}
-                    </p>
-                    {!feedbackData.isCorrect && (
-                      <p className="text-[#F5EFD9] mb-2">
-                        <span className="opacity-60">Bonne réponse :</span>{' '}
-                        <span className="font-semibold">{feedbackData.correctAnswer}</span>
-                      </p>
+                    </motion.p>
+                    {!feedbackData.isCorrect && feedbackData.correctAnswer && (
+                      <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-[#F5EFD9] mb-3 text-base"
+                      >
+                        <span className="opacity-70">Bonne réponse :</span>{' '}
+                        <span className="font-bold text-lg text-yellow-300">{feedbackData.correctAnswer}</span>
+                      </motion.p>
                     )}
                     {feedbackData.explanation && (
-                      <p className="text-[#F5EFD9]/80 text-sm mb-2">
+                      <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-[#F5EFD9]/90 text-sm mb-3 leading-relaxed"
+                      >
                         {feedbackData.explanation}
-                      </p>
+                      </motion.p>
                     )}
-                    <div className="flex items-center gap-2 mt-2">
-                      <Sparkles size={16} className="text-[#C9A84C]" />
-                      <span className="text-[#C9A84C] font-bold">
-                        +{feedbackData.pointsEarned} points
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10"
+                    >
+                      <Sparkles size={18} className="text-[#C9A84C]" />
+                      <span className="text-[#C9A84C] font-bold text-lg">
+                        +{feedbackData.pointsEarned} {feedbackData.pointsEarned === 1 ? 'point' : 'points'}
                       </span>
-                    </div>
+                    </motion.div>
                   </div>
                 </div>
               </motion.div>

@@ -44,8 +44,12 @@ cd ..
 echo "🎨 Démarrage du frontend..."
 cd frontend
 
+# Augmenter la limite de fichiers ouverts pour éviter EMFILE
+ulimit -n 65536 2>/dev/null || true
+
 echo "   Démarrage du serveur React sur http://localhost:3000"
-yarn start &
+# Utiliser polling pour éviter les erreurs EMFILE
+CHOKIDAR_USEPOLLING=true yarn start &
 FRONTEND_PID=$!
 
 cd ..

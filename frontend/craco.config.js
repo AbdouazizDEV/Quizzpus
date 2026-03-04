@@ -49,16 +49,24 @@ const webpackConfig = {
     configure: (webpackConfig) => {
 
       // Add ignored patterns to reduce watched directories
-        webpackConfig.watchOptions = {
-          ...webpackConfig.watchOptions,
-          ignored: [
-            '**/node_modules/**',
-            '**/.git/**',
-            '**/build/**',
-            '**/dist/**',
-            '**/coverage/**',
-            '**/public/**',
+      // Use polling for better performance on systems with many files
+      webpackConfig.watchOptions = {
+        ...webpackConfig.watchOptions,
+        ignored: [
+          '**/node_modules/**',
+          '**/.git/**',
+          '**/build/**',
+          '**/dist/**',
+          '**/coverage/**',
+          '**/public/**',
+          '**/backend/**',
+          '**/__pycache__/**',
+          '**/.cache/**',
+          '**/.next/**',
         ],
+        // Use polling instead of native file watching to avoid EMFILE errors
+        poll: 1000, // Check for changes every second
+        aggregateTimeout: 300, // Wait 300ms after changes before rebuilding
       };
 
       // Add health check plugin to webpack if enabled

@@ -79,6 +79,14 @@ const QuizGame = () => {
   // Handle validation response
   const handleValidationResponse = useCallback((data) => {
     console.log('✅ Validation response received:', data); // Debug log
+    console.log('📊 Setting feedback data:', {
+      isCorrect: data.is_correct,
+      pointsEarned: data.points_earned,
+      explanation: data.explanation,
+      correctAnswer: data.correct_answer
+    });
+    
+    // Set feedback data first
     setFeedbackData({
       isCorrect: data.is_correct || false,
       pointsEarned: data.points_earned || 0,
@@ -87,17 +95,23 @@ const QuizGame = () => {
     });
     setCurrentScore(data.current_score || 0);
     setTotalPoints(data.total_points || 0);
-    setShowFeedback(true);
-    setIsValidating(false);
     
-    // Auto-advance after 4 seconds (increased for better visibility)
+    // Show feedback after a small delay to ensure state is updated
+    setTimeout(() => {
+      setShowFeedback(true);
+      setIsValidating(false);
+      console.log('👁️ Feedback should now be visible');
+    }, 50);
+    
+    // Auto-advance after minimum 2 seconds (changed from 4 to ensure visibility)
     feedbackTimeoutRef.current = setTimeout(() => {
+      console.log('⏭️ Auto-advancing to next question');
       if (data.is_complete) {
         finishQuizSession();
       } else {
         moveToNextQuestion();
       }
-    }, 4000);
+    }, 2000);
   }, [finishQuizSession, moveToNextQuestion]);
 
   // Handle time expired
@@ -340,44 +354,44 @@ const QuizGame = () => {
                   )}
                   <div className="flex-1">
                     <motion.p 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.1 }}
-                      className={`font-bold text-xl mb-3 ${
-                        feedbackData.isCorrect ? 'text-green-300' : 'text-red-300'
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1, duration: 0.3 }}
+                      className={`font-bold text-2xl mb-4 ${
+                        feedbackData.isCorrect ? 'text-green-200' : 'text-red-200'
                       }`}
                     >
                       {feedbackData.isCorrect ? '✅ Correct !' : '❌ Incorrect'}
                     </motion.p>
                     {!feedbackData.isCorrect && feedbackData.correctAnswer && (
-                      <motion.p 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="text-[#F5EFD9] mb-3 text-base"
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2, duration: 0.3 }}
+                        className="mb-3 p-3 bg-yellow-500/20 rounded-lg border border-yellow-400/30"
                       >
-                        <span className="opacity-70">Bonne réponse :</span>{' '}
-                        <span className="font-bold text-lg text-yellow-300">{feedbackData.correctAnswer}</span>
-                      </motion.p>
+                        <p className="text-[#F5EFD9] text-sm mb-1 opacity-80">Bonne réponse :</p>
+                        <p className="font-bold text-lg text-yellow-200">{feedbackData.correctAnswer}</p>
+                      </motion.div>
                     )}
                     {feedbackData.explanation && (
                       <motion.p 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="text-[#F5EFD9]/90 text-sm mb-3 leading-relaxed"
+                        transition={{ delay: 0.3, duration: 0.3 }}
+                        className="text-[#F5EFD9] text-base mb-4 leading-relaxed"
                       >
                         {feedbackData.explanation}
                       </motion.p>
                     )}
                     <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.4, type: "spring" }}
+                      className="flex items-center gap-3 mt-4 pt-4 border-t border-white/20"
                     >
-                      <Sparkles size={18} className="text-[#C9A84C]" />
-                      <span className="text-[#C9A84C] font-bold text-lg">
+                      <Sparkles size={20} className="text-[#C9A84C] animate-pulse" />
+                      <span className="text-[#C9A84C] font-bold text-xl">
                         +{feedbackData.pointsEarned} {feedbackData.pointsEarned === 1 ? 'point' : 'points'}
                       </span>
                     </motion.div>

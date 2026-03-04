@@ -78,25 +78,26 @@ const QuizGame = () => {
 
   // Handle validation response
   const handleValidationResponse = useCallback((data) => {
+    console.log('✅ Validation response received:', data); // Debug log
     setFeedbackData({
-      isCorrect: data.is_correct,
-      pointsEarned: data.points_earned,
-      explanation: data.explanation,
-      correctAnswer: data.correct_answer
+      isCorrect: data.is_correct || false,
+      pointsEarned: data.points_earned || 0,
+      explanation: data.explanation || '',
+      correctAnswer: data.correct_answer || ''
     });
-    setCurrentScore(data.current_score);
-    setTotalPoints(data.total_points);
+    setCurrentScore(data.current_score || 0);
+    setTotalPoints(data.total_points || 0);
     setShowFeedback(true);
     setIsValidating(false);
     
-    // Auto-advance after 3 seconds
+    // Auto-advance after 4 seconds (increased for better visibility)
     feedbackTimeoutRef.current = setTimeout(() => {
       if (data.is_complete) {
         finishQuizSession();
       } else {
         moveToNextQuestion();
       }
-    }, 3000);
+    }, 4000);
   }, [finishQuizSession, moveToNextQuestion]);
 
   // Handle time expired

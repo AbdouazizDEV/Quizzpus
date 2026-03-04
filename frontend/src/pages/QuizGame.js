@@ -62,18 +62,27 @@ const QuizGame = () => {
 
   // Move to next question
   const moveToNextQuestion = useCallback(() => {
+    console.log('🔄 Moving to next question');
+    // Clear feedback timeout
     if (feedbackTimeoutRef.current) {
       clearTimeout(feedbackTimeoutRef.current);
     }
     
-    setCurrentIndex((prevIndex) => {
-      if (prevIndex < questions.length - 1) {
-        return prevIndex + 1;
-      } else {
-        finishQuizSession();
-        return prevIndex;
-      }
-    });
+    // Hide feedback first, then move to next question after a small delay
+    setShowFeedback(false);
+    setFeedbackData(null);
+    
+    // Small delay to ensure feedback disappears smoothly
+    setTimeout(() => {
+      setCurrentIndex((prevIndex) => {
+        if (prevIndex < questions.length - 1) {
+          return prevIndex + 1;
+        } else {
+          finishQuizSession();
+          return prevIndex;
+        }
+      });
+    }, 100);
   }, [questions.length, finishQuizSession]);
 
   // Handle validation response

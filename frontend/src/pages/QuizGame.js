@@ -311,6 +311,91 @@ const QuizGame = () => {
 
       {/* Question */}
       <div className="flex-1 px-6 py-8 overflow-y-auto">
+        {/* Feedback Display - Outside AnimatePresence to ensure visibility */}
+        {showFeedback && feedbackData && (
+          <motion.div
+            key={`feedback-${currentIndex}`}
+            initial={{ opacity: 0, y: -30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className={`mb-6 p-6 rounded-xl shadow-2xl z-50 relative ${
+              feedbackData.isCorrect 
+                ? 'bg-gradient-to-r from-green-500/50 to-green-600/40 border-3 border-green-400 shadow-green-500/40' 
+                : 'bg-gradient-to-r from-red-500/50 to-red-600/40 border-3 border-red-400 shadow-red-500/40'
+            }`}
+            style={{ 
+              minHeight: '140px',
+              backdropFilter: 'blur(12px)',
+              position: 'relative'
+            }}
+          >
+            <div className="flex items-start gap-4">
+              {feedbackData.isCorrect ? (
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
+                >
+                  <CheckCircle className="text-green-300 flex-shrink-0 mt-1" size={36} strokeWidth={3} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
+                >
+                  <XCircle className="text-red-300 flex-shrink-0 mt-1" size={36} strokeWidth={3} />
+                </motion.div>
+              )}
+              <div className="flex-1">
+                <motion.p 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                  className={`font-bold text-3xl mb-4 ${
+                    feedbackData.isCorrect ? 'text-green-200' : 'text-red-200'
+                  }`}
+                >
+                  {feedbackData.isCorrect ? '✅ Correct !' : '❌ Incorrect'}
+                </motion.p>
+                {!feedbackData.isCorrect && feedbackData.correctAnswer && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.4 }}
+                    className="mb-4 p-4 bg-yellow-500/30 rounded-lg border-2 border-yellow-400/50"
+                  >
+                    <p className="text-[#F5EFD9] text-sm mb-2 opacity-90 font-semibold">Bonne réponse :</p>
+                    <p className="font-bold text-xl text-yellow-200">{feedbackData.correctAnswer}</p>
+                  </motion.div>
+                )}
+                {feedbackData.explanation && (
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4, duration: 0.4 }}
+                    className="text-[#F5EFD9] text-base mb-4 leading-relaxed"
+                  >
+                    {feedbackData.explanation}
+                  </motion.p>
+                )}
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring" }}
+                  className="flex items-center gap-3 mt-4 pt-4 border-t-2 border-white/30"
+                >
+                  <Sparkles size={22} className="text-[#C9A84C] animate-pulse" />
+                  <span className="text-[#C9A84C] font-bold text-xl">
+                    +{feedbackData.pointsEarned} {feedbackData.pointsEarned === 1 ? 'point' : 'points'}
+                  </span>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
@@ -321,84 +406,6 @@ const QuizGame = () => {
             <h2 className="text-2xl font-bold text-[#F5EFD9] mb-8" data-testid="question-text">
               {currentQuestion.question_text}
             </h2>
-
-            {/* Feedback Display */}
-            {showFeedback && feedbackData && (
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className={`mb-6 p-5 rounded-xl shadow-lg ${
-                  feedbackData.isCorrect 
-                    ? 'bg-green-500/30 border-2 border-green-400 shadow-green-500/20' 
-                    : 'bg-red-500/30 border-2 border-red-400 shadow-red-500/20'
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  {feedbackData.isCorrect ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.2, type: "spring" }}
-                    >
-                      <CheckCircle className="text-green-400 flex-shrink-0 mt-1" size={32} strokeWidth={2.5} />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.2, type: "spring" }}
-                    >
-                      <XCircle className="text-red-400 flex-shrink-0 mt-1" size={32} strokeWidth={2.5} />
-                    </motion.div>
-                  )}
-                  <div className="flex-1">
-                    <motion.p 
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1, duration: 0.3 }}
-                      className={`font-bold text-2xl mb-4 ${
-                        feedbackData.isCorrect ? 'text-green-200' : 'text-red-200'
-                      }`}
-                    >
-                      {feedbackData.isCorrect ? '✅ Correct !' : '❌ Incorrect'}
-                    </motion.p>
-                    {!feedbackData.isCorrect && feedbackData.correctAnswer && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.3 }}
-                        className="mb-3 p-3 bg-yellow-500/20 rounded-lg border border-yellow-400/30"
-                      >
-                        <p className="text-[#F5EFD9] text-sm mb-1 opacity-80">Bonne réponse :</p>
-                        <p className="font-bold text-lg text-yellow-200">{feedbackData.correctAnswer}</p>
-                      </motion.div>
-                    )}
-                    {feedbackData.explanation && (
-                      <motion.p 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.3 }}
-                        className="text-[#F5EFD9] text-base mb-4 leading-relaxed"
-                      >
-                        {feedbackData.explanation}
-                      </motion.p>
-                    )}
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.4, type: "spring" }}
-                      className="flex items-center gap-3 mt-4 pt-4 border-t border-white/20"
-                    >
-                      <Sparkles size={20} className="text-[#C9A84C] animate-pulse" />
-                      <span className="text-[#C9A84C] font-bold text-xl">
-                        +{feedbackData.pointsEarned} {feedbackData.pointsEarned === 1 ? 'point' : 'points'}
-                      </span>
-                    </motion.div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
 
             {/* Answer Options */}
             <div className="space-y-3">

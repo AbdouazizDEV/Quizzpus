@@ -207,27 +207,6 @@ const QuizGame = () => {
     }
   };
 
-  // Finish quiz session
-  const finishQuizSession = useCallback(async () => {
-    if (feedbackTimeoutRef.current) {
-      clearTimeout(feedbackTimeoutRef.current);
-    }
-    
-    if (!sessionId) return;
-    
-    try {
-      const response = await finishQuiz(sessionId);
-      navigate('/quiz/results', { 
-        state: { 
-          results: response.data, 
-          themeId 
-        } 
-      });
-    } catch (error) {
-      toast.error('Erreur lors de la finalisation du quiz');
-    }
-  }, [sessionId, themeId, navigate]);
-
   // Move to next question
   const moveToNextQuestion = useCallback(() => {
     if (feedbackTimeoutRef.current) {

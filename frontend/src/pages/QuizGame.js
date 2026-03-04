@@ -118,9 +118,10 @@ const QuizGame = () => {
     
     // Auto-advance after minimum 2.5 seconds (ensures feedback is visible for at least 2 seconds)
     const startTime = Date.now();
+    console.log('⏰ Setting timeout for 2500ms at', new Date().toISOString());
     feedbackTimeoutRef.current = setTimeout(() => {
       const elapsed = Date.now() - startTime;
-      console.log(`⏭️ Auto-advancing to next question after ${elapsed}ms (should be ~2500ms)`);
+      console.log(`⏭️ Auto-advancing to next question after ${elapsed}ms (should be ~2500ms) at`, new Date().toISOString());
       if (data.is_complete) {
         finishQuizSession();
       } else {

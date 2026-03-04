@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, CheckCircle, XCircle, Sparkles } from 'lucide-react';
@@ -58,10 +58,95 @@ const QuizGame = () => {
       setGameStarted(true);
       startQuestionTimer();
     }
-  }, [countdown, gameStarted, loading]);
+  }, [countdown, gameStarted, loading, startQuestionTimer]);
+
+  // Finish quiz session
+  const finishQuizSession = useCallback(async () => {
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    
+    if (!sessionId) return;
+    
+    try {
+      const response = await finishQuiz(sessionId);
+      navigate('/quiz/results', { 
+        state: { 
+          results: response.data, 
+          themeId 
+        } 
+      });
+    } catch (error) {
+      toast.error('Erreur lors de la finalisation du quiz');
+    }
+  }, [sessionId, themeId, navigate]);
+
+  // Move to next question
+  const moveToNextQuestion = useCallback(() => {
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    
+    setCurrentIndex((prevIndex) => {
+      if (prevIndex < questions.length - 1) {
+        return prevIndex + 1;
+      } else {
+        finishQuizSession();
+        return prevIndex;
+      }
+    });
+  }, [questions.length, finishQuizSession]);
+
+  // Handle validation response
+  const handleValidationResponse = useCallback((data) => {
+    setFeedbackData({
+      isCorrect: data.is_correct,
+      pointsEarned: data.points_earned,
+      explanation: data.explanation,
+      correctAnswer: data.correct_answer
+    });
+    setCurrentScore(data.current_score);
+    setTotalPoints(data.total_points);
+    setShowFeedback(true);
+    setIsValidating(false);
+    
+    // Auto-advance after 3 seconds
+    feedbackTimeoutRef.current = setTimeout(() => {
+      if (data.is_complete) {
+        finishQuizSession();
+      } else {
+        moveToNextQuestion();
+      }
+    }, 3000);
+  }, [finishQuizSession, moveToNextQuestion]);
+
+  // Handle time expired
+  const handleTimeExpired = useCallback(async () => {
+    if (isValidating || showFeedback) return;
+    
+    const currentQuestion = questions[currentIndex];
+    if (!currentQuestion || !sessionId) return;
+    
+    setIsValidating(true);
+    const timeTaken = 10; // Time expired
+    
+    try {
+      const response = await validateAnswer(
+        sessionId,
+        currentQuestion.question_id,
+        '', // No answer given
+        timeTaken
+      );
+      
+      handleValidationResponse(response.data);
+    } catch (error) {
+      toast.error('Erreur lors de la validation');
+      setIsValidating(false);
+    }
+  }, [isValidating, showFeedback, questions, currentIndex, sessionId, handleValidationResponse]);
 
   // Start timer for current question
-  const startQuestionTimer = () => {
+  const startQuestionTimer = useCallback(() => {
     setTimeLeft(10);
     setQuestionStartTime(Date.now());
     setSelectedAnswer('');
@@ -84,32 +169,7 @@ const QuizGame = () => {
         return prev - 1;
       });
     }, 1000);
-  };
-
-  // Handle time expired
-  const handleTimeExpired = async () => {
-    if (isValidating || showFeedback) return;
-    
-    const currentQuestion = questions[currentIndex];
-    if (!currentQuestion) return;
-    
-    setIsValidating(true);
-    const timeTaken = 10; // Time expired
-    
-    try {
-      const response = await validateAnswer(
-        sessionId,
-        currentQuestion.question_id,
-        '', // No answer given
-        timeTaken
-      );
-      
-      handleValidationResponse(response.data);
-    } catch (error) {
-      toast.error('Erreur lors de la validation');
-      setIsValidating(false);
-    }
-  };
+  }, [handleTimeExpired]);
 
   // Handle answer selection
   const handleAnswer = (answer) => {
@@ -147,48 +207,13 @@ const QuizGame = () => {
     }
   };
 
-  // Handle validation response
-  const handleValidationResponse = (data) => {
-    setFeedbackData({
-      isCorrect: data.is_correct,
-      pointsEarned: data.points_earned,
-      explanation: data.explanation,
-      correctAnswer: data.correct_answer
-    });
-    setCurrentScore(data.current_score);
-    setTotalPoints(data.total_points);
-    setShowFeedback(true);
-    setIsValidating(false);
-    
-    // Auto-advance after 3 seconds
-    feedbackTimeoutRef.current = setTimeout(() => {
-      if (data.is_complete) {
-        finishQuizSession();
-      } else {
-        moveToNextQuestion();
-      }
-    }, 3000);
-  };
-
-  // Move to next question
-  const moveToNextQuestion = () => {
-    if (feedbackTimeoutRef.current) {
-      clearTimeout(feedbackTimeoutRef.current);
-    }
-    
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      startQuestionTimer();
-    } else {
-      finishQuizSession();
-    }
-  };
-
   // Finish quiz session
-  const finishQuizSession = async () => {
+  const finishQuizSession = useCallback(async () => {
     if (feedbackTimeoutRef.current) {
       clearTimeout(feedbackTimeoutRef.current);
     }
+    
+    if (!sessionId) return;
     
     try {
       const response = await finishQuiz(sessionId);
@@ -201,7 +226,30 @@ const QuizGame = () => {
     } catch (error) {
       toast.error('Erreur lors de la finalisation du quiz');
     }
-  };
+  }, [sessionId, themeId, navigate]);
+
+  // Move to next question
+  const moveToNextQuestion = useCallback(() => {
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    
+    setCurrentIndex((prevIndex) => {
+      if (prevIndex < questions.length - 1) {
+        return prevIndex + 1;
+      } else {
+        finishQuizSession();
+        return prevIndex;
+      }
+    });
+  }, [questions.length, finishQuizSession]);
+
+  // Start timer when question changes
+  useEffect(() => {
+    if (gameStarted && questions.length > 0 && currentIndex < questions.length) {
+      startQuestionTimer();
+    }
+  }, [currentIndex, gameStarted, questions.length, startQuestionTimer]);
 
   // Cleanup on unmount
   useEffect(() => {

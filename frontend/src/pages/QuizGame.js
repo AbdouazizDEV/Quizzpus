@@ -207,22 +207,6 @@ const QuizGame = () => {
     }
   };
 
-  // Move to next question
-  const moveToNextQuestion = useCallback(() => {
-    if (feedbackTimeoutRef.current) {
-      clearTimeout(feedbackTimeoutRef.current);
-    }
-    
-    setCurrentIndex((prevIndex) => {
-      if (prevIndex < questions.length - 1) {
-        return prevIndex + 1;
-      } else {
-        finishQuizSession();
-        return prevIndex;
-      }
-    });
-  }, [questions.length, finishQuizSession]);
-
   // Start timer when question changes
   useEffect(() => {
     if (gameStarted && questions.length > 0 && currentIndex < questions.length) {

@@ -132,6 +132,15 @@ class QuizSubmission(BaseModel):
     answers: List[str]  # List of user answers
     time_taken: int  # seconds
 
+class QuizSessionStart(BaseModel):
+    theme_id: str
+
+class AnswerValidation(BaseModel):
+    session_id: str
+    question_id: str
+    answer: str
+    time_taken: int  # seconds taken to answer this question (max 10)
+
 class QuizResult(BaseModel):
     model_config = ConfigDict(extra="ignore")
     result_id: str
@@ -580,7 +589,7 @@ async def get_themes():
 
 @api_router.get("/themes/{theme_id}/quiz")
 async def get_theme_quiz(theme_id: str, request: Request):
-    """Get random 10 questions from a theme"""
+    """Get random 10 questions from a theme (legacy endpoint)"""
     user = await get_current_user(request)
     
     # Get all questions for theme
@@ -602,6 +611,283 @@ async def get_theme_quiz(theme_id: str, request: Request):
         q.pop("explanation", None)
     
     return selected
+
+@api_router.post("/quiz/start")
+async def start_quiz(data: QuizSessionStart, request: Request):
+    """Start a new quiz session with questions based on user's favorite themes"""
+    user = await get_current_user(request)
+    
+    # Get user's favorite themes
+    favorite_themes = user.get("favorite_themes", [])
+    
+    # If no favorite themes or theme_id specified, use the specified theme
+    theme_id = data.theme_id
+    
+    # Get all questions for theme
+    questions = await db.quiz_questions.find(
+        {"theme_id": theme_id},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    if len(questions) < 10:
+        raise HTTPException(status_code=404, detail="Not enough questions for this theme")
+    
+    # Randomly select 10 questions
+    selected = random.sample(questions, 10)
+    
+    # Create quiz session
+    session_id = f"quiz_{uuid.uuid4().hex[:16]}"
+    session_doc = {
+        "session_id": session_id,
+        "user_id": user["user_id"],
+        "theme_id": theme_id,
+        "questions": selected,  # Store questions with correct answers for validation
+        "answers": [],
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "current_question": 0,
+        "score": 0,
+        "points_earned": 0,
+        "completed": False
+    }
+    await db.quiz_sessions.insert_one(session_doc)
+    
+    # Prepare questions for client (without correct answers)
+    questions_for_client = []
+    for q in selected:
+        q_client = {
+            "question_id": q["question_id"],
+            "question_text": q["question_text"],
+            "question_type": q["question_type"],
+            "options": q.get("options", []),
+            "difficulty": q.get("difficulty", 1)
+        }
+        questions_for_client.append(q_client)
+    
+    return {
+        "session_id": session_id,
+        "questions": questions_for_client,
+        "total_questions": len(questions_for_client),
+        "time_per_question": 10  # 10 seconds per question
+    }
+
+@api_router.post("/quiz/validate-answer")
+async def validate_answer(data: AnswerValidation, request: Request):
+    """Validate a single answer with timer (10 seconds max per question)"""
+    user = await get_current_user(request)
+    
+    # Get quiz session
+    session = await db.quiz_sessions.find_one(
+        {"session_id": data.session_id, "user_id": user["user_id"]},
+        {"_id": 0}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Quiz session not found")
+    
+    if session.get("completed", False):
+        raise HTTPException(status_code=400, detail="Quiz already completed")
+    
+    # Check if time exceeded (10 seconds max)
+    if data.time_taken > 10:
+        # Time exceeded, mark as incorrect
+        is_correct = False
+        answer_given = None
+        question_points = 0
+    else:
+        # Find the question
+        current_index = session.get("current_question", 0)
+        if current_index >= len(session["questions"]):
+            raise HTTPException(status_code=400, detail="Invalid question index")
+        
+        question = session["questions"][current_index]
+        
+        # Validate answer based on question type
+        correct_answer = question["correct_answer"]
+        is_correct = False
+        
+        if question["question_type"] == "mcq":
+            # Multiple choice: exact match
+            is_correct = data.answer.strip() == correct_answer.strip()
+        elif question["question_type"] == "true_false":
+            # True/False: exact match
+            is_correct = data.answer.strip() == correct_answer.strip()
+        elif question["question_type"] == "text":
+            # Text input: case-insensitive comparison
+            is_correct = data.answer.strip().lower() == correct_answer.strip().lower()
+        else:
+            # Default: exact match
+            is_correct = data.answer.strip() == correct_answer.strip()
+        
+        answer_given = data.answer
+        
+        # Calculate points for this question
+        # Base points: 1 point per correct answer
+        # Difficulty multiplier: 1x (easy), 1.5x (medium), 2x (hard)
+        # Time bonus: +0.5 points if answered in < 5 seconds
+        base_points = 1 if is_correct else 0
+        difficulty_multiplier = {1: 1.0, 2: 1.5, 3: 2.0}.get(question.get("difficulty", 1), 1.0)
+        time_bonus = 0.5 if data.time_taken < 5 and is_correct else 0
+        
+        question_points = int((base_points * difficulty_multiplier) + time_bonus)
+    
+    # If time exceeded, question_points is already 0 from initialization
+    
+    # Update session
+    new_score = session.get("score", 0) + (1 if is_correct else 0)
+    new_points = session.get("points_earned", 0) + question_points
+    new_current = session.get("current_question", 0) + 1
+    
+    # Add answer to session
+    answers = session.get("answers", [])
+    answers.append({
+        "question_id": data.question_id,
+        "answer": answer_given,
+        "is_correct": is_correct,
+        "time_taken": data.time_taken,
+        "points_earned": question_points,
+        "answered_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Check if quiz is complete
+    is_complete = new_current >= len(session["questions"])
+    
+    update_doc = {
+        "$set": {
+            "score": new_score,
+            "points_earned": new_points,
+            "current_question": new_current,
+            "answers": answers,
+            "completed": is_complete
+        }
+    }
+    
+    if is_complete:
+        update_doc["$set"]["completed_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.quiz_sessions.update_one(
+        {"session_id": data.session_id},
+        update_doc
+    )
+    
+    # Get question details for response
+    current_index = session.get("current_question", 0)
+    question = session["questions"][current_index] if current_index < len(session["questions"]) else None
+    
+    response = {
+        "is_correct": is_correct,
+        "points_earned": question_points,
+        "current_score": new_score,
+        "total_points": new_points,
+        "question_number": new_current,
+        "total_questions": len(session["questions"]),
+        "is_complete": is_complete
+    }
+    
+    # Add explanation and correct answer if question exists
+    if question:
+        response["explanation"] = question.get("explanation", "")
+        response["correct_answer"] = question.get("correct_answer", "")
+    
+    return response
+
+@api_router.post("/quiz/finish")
+async def finish_quiz(session_id: str, request: Request):
+    """Finish quiz and calculate final score with bonuses"""
+    user = await get_current_user(request)
+    
+    # Get quiz session
+    session = await db.quiz_sessions.find_one(
+        {"session_id": session_id, "user_id": user["user_id"]},
+        {"_id": 0}
+    )
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Quiz session not found")
+    
+    if not session.get("completed", False):
+        raise HTTPException(status_code=400, detail="Quiz not completed yet")
+    
+    # Calculate final score with bonuses
+    base_score = session.get("score", 0)
+    base_points = session.get("points_earned", 0)
+    total_questions = len(session.get("questions", []))
+    
+    # Perfect score bonus
+    perfect_bonus = 10 if base_score == total_questions else 0
+    
+    # Speed bonus (if completed in less than 60 seconds total)
+    started_at = datetime.fromisoformat(session["started_at"])
+    completed_at = datetime.fromisoformat(session.get("completed_at", datetime.now(timezone.utc).isoformat()))
+    total_time = (completed_at - started_at).total_seconds()
+    speed_bonus = 5 if total_time < 60 else 0
+    
+    final_points = int(base_points + perfect_bonus + speed_bonus)
+    perfect_score = base_score == total_questions
+    
+    # Save final result
+    result_id = f"result_{uuid.uuid4().hex[:12]}"
+    result_doc = {
+        "result_id": result_id,
+        "user_id": user["user_id"],
+        "theme_id": session["theme_id"],
+        "score": base_score,
+        "total_questions": total_questions,
+        "points_earned": final_points,
+        "time_taken": int(total_time),
+        "date": datetime.now(timezone.utc).isoformat(),
+        "perfect_score": perfect_score,
+        "session_id": session_id
+    }
+    await db.user_quiz_results.insert_one(result_doc)
+    
+    # Update user points and level
+    await db.users.update_one(
+        {"user_id": user["user_id"]},
+        {"$inc": {"points": final_points}}
+    )
+    
+    # Update level based on total points
+    updated_user = await db.users.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    new_level = calculate_level(updated_user["points"])
+    
+    if new_level != updated_user.get("level", 1):
+        await db.users.update_one(
+            {"user_id": user["user_id"]},
+            {"$set": {"level": new_level}}
+        )
+    
+    # Check and award badges
+    await check_and_award_badges(user["user_id"])
+    
+    # Prepare results detail
+    results_detail = []
+    questions = session.get("questions", [])
+    answers = session.get("answers", [])
+    
+    for i, answer_data in enumerate(answers):
+        if i < len(questions):
+            results_detail.append({
+                "question": questions[i]["question_text"],
+                "user_answer": answer_data.get("answer", ""),
+                "correct_answer": questions[i].get("correct_answer", ""),
+                "is_correct": answer_data.get("is_correct", False),
+                "explanation": questions[i].get("explanation", ""),
+                "points_earned": answer_data.get("points_earned", 0),
+                "time_taken": answer_data.get("time_taken", 0)
+            })
+    
+    return {
+        "score": base_score,
+        "total_questions": total_questions,
+        "points_earned": final_points,
+        "base_points": base_points,
+        "perfect_bonus": perfect_bonus,
+        "speed_bonus": speed_bonus,
+        "perfect_score": perfect_score,
+        "new_level": new_level,
+        "time_taken": int(total_time),
+        "results_detail": results_detail
+    }
 
 @api_router.post("/quiz/submit")
 async def submit_quiz(data: QuizSubmission, request: Request):

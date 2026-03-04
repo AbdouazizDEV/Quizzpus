@@ -39,27 +39,6 @@ const QuizGame = () => {
     }
   };
 
-  useEffect(() => {
-    if (!themeId || themeId === 'undefined') {
-      toast.error('Aucun thème sélectionné. Choisis un quizz pour commencer.');
-      navigate('/quiz');
-      return;
-    }
-    initializeQuiz();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [themeId]);
-
-  // Countdown before game starts
-  useEffect(() => {
-    if (countdown > 0 && !gameStarted && !loading) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (countdown === 0 && !gameStarted && !loading) {
-      setGameStarted(true);
-      startQuestionTimer();
-    }
-  }, [countdown, gameStarted, loading, startQuestionTimer]);
-
   // Finish quiz session
   const finishQuizSession = useCallback(async () => {
     if (feedbackTimeoutRef.current) {
@@ -170,6 +149,27 @@ const QuizGame = () => {
       });
     }, 1000);
   }, [handleTimeExpired]);
+
+  useEffect(() => {
+    if (!themeId || themeId === 'undefined') {
+      toast.error('Aucun thème sélectionné. Choisis un quizz pour commencer.');
+      navigate('/quiz');
+      return;
+    }
+    initializeQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [themeId]);
+
+  // Countdown before game starts
+  useEffect(() => {
+    if (countdown > 0 && !gameStarted && !loading) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (countdown === 0 && !gameStarted && !loading) {
+      setGameStarted(true);
+      startQuestionTimer();
+    }
+  }, [countdown, gameStarted, loading, startQuestionTimer]);
 
   // Handle answer selection
   const handleAnswer = (answer) => {

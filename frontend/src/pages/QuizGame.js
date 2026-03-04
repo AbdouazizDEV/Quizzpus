@@ -62,17 +62,21 @@ const QuizGame = () => {
 
   // Move to next question
   const moveToNextQuestion = useCallback(() => {
-    console.log('🔄 Moving to next question');
-    // Clear feedback timeout
+    console.log('🔄 Moving to next question at', new Date().toISOString());
+    console.trace('Stack trace for moveToNextQuestion'); // Debug: voir d'où vient l'appel
+    
+    // Clear feedback timeout to prevent double execution
     if (feedbackTimeoutRef.current) {
+      console.log('🧹 Clearing feedback timeout');
       clearTimeout(feedbackTimeoutRef.current);
+      feedbackTimeoutRef.current = null;
     }
     
-    // Hide feedback first, then move to next question after a small delay
+    // Hide feedback first
     setShowFeedback(false);
     setFeedbackData(null);
     
-    // Small delay to ensure feedback disappears smoothly
+    // Small delay to ensure feedback disappears smoothly before showing next question
     setTimeout(() => {
       setCurrentIndex((prevIndex) => {
         if (prevIndex < questions.length - 1) {
@@ -82,7 +86,7 @@ const QuizGame = () => {
           return prevIndex;
         }
       });
-    }, 100);
+    }, 200);
   }, [questions.length, finishQuizSession]);
 
   // Handle validation response
